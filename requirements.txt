@@ -1,0 +1,8 @@
+torch
+torchvision
+numpy
+wandb
+pandas
+pillow
+tqdm
+vit_pytorch
