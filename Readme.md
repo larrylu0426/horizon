@@ -60,7 +60,7 @@ python run.py
 ```
 
 ### Config file format
-Config files are in `.json` format:
+Config files are in `.yaml` format:
 ```YAML
 arch:
   value: 
