@@ -1,0 +1,42 @@
+arch:
+  value: 
+    name: VIT
+
+dataset:
+  value:
+    name: CIFAR100
+    args:
+      root: data/CIFAR100
+      batch_size: 256
+      shuffle: false
+      num_workers: 16
+      val_split: 0.1
+      test_split: 0.2
+
+loss:
+  value: cross_entropy
+
+optimizer:
+  value:
+    name: SGD
+    args:
+      lr: 0.1
+      weight_decay: 1.0e-4
+      momentum: 0.9
+lr_scheduler:
+  value:
+    name: StepLR
+    args:
+      step_size: 20
+      gamma: 0.1
+metrics:
+  value:
+    - accuracy
+trainer:
+  value:
+    name: Demo
+    seed: 0
+    n_gpu: 1
+    epochs: 60
+    monitor: max val_accuracy
+    early_stop: 10
