@@ -12,6 +12,7 @@ import horizon.utils.const as const
 from horizon.utils.logger import Logger
 import horizon.utils.loss as module_loss
 import horizon.utils.metric as module_metric
+from horizon.utils.util import DataPrefetcher
 from horizon.utils.util import MetricTracker
 from horizon.utils.util import timer
 
@@ -51,6 +52,10 @@ class BaseTrainer:
 
         _data_loaders = self._add_data_loaders()
         self.train_data, self.val_data, self.test_data = _data_loaders
+        self.train_data = DataPrefetcher(self.train_data)
+        self.val_data = DataPrefetcher(self.val_data)
+        self.test_data = DataPrefetcher(self.test_data)
+
         self.do_validation = True if self.val_data else False
         self.do_test = True if self.test_data else False
 

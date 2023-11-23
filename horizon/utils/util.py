@@ -94,3 +94,53 @@ class MetricTracker:
 
     def result(self):
         return dict(self._data.average)
+
+
+class DataPrefetcher():
+
+    def __init__(self, loader):
+        self.loader = loader
+        self.iter = iter(self.loader)
+        self.stream = torch.cuda.Stream()
+        self.preload()
+
+    def __len__(self):
+        return len(self.loader)
+
+    def preload(self):
+        try:
+            self.next_input, self.next_target = next(self.iter)
+        except StopIteration:
+            self.next_input = None
+            self.next_target = None
+            return
+        with torch.cuda.stream(self.stream):
+            if type(self.next_input) is dict:
+                for key in self.next_input.keys():
+                    if isinstance(self.next_input[key], torch.Tensor):
+                        self.next_input[key] = self.next_input[key].cuda(
+                            non_blocking=True)
+            else:
+                self.next_input = self.next_input.cuda(non_blocking=True)
+            if type(self.next_target) is dict:
+                for key in self.next_target.keys():
+                    if isinstance(self.next_target[key], torch.Tensor):
+                        self.next_target[key] = self.next_target[key].cuda(
+                            non_blocking=True)
+            else:
+                self.next_target = self.next_target.cuda(non_blocking=True)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        torch.cuda.current_stream().wait_stream(self.stream)
+        input = self.next_input
+        target = self.next_target
+        if input is None and target is None:
+            self.iter = iter(self.loader)
+            self.preload()
+            raise StopIteration
+        else:
+            self.preload()
+            return input, target
