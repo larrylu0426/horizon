@@ -19,7 +19,8 @@ def main(args):
     init_seeds(config['trainer']['seed'])
 
     # prepare for (multi-device) GPU training
-    device, device_ids = prepare_device(config['trainer']['n_gpu'])
+    device, device_ids = prepare_device(config['trainer']['gpu_ids'],
+                                        config['trainer']['use_gpu'])
 
     # build model architecture
     model = config.init_obj('arch', module_arch)

@@ -28,24 +28,34 @@ def init_seeds(seed=0):
     torch.backends.cudnn.benchmark = False
 
 
-def prepare_device(n_gpu):
+def prepare_device(gpu_ids, use_gpu):
     """
     setup GPU device if available. get gpu device indices which are used for DataParallel
     """
-    if torch.backends.mps.is_available():
-        device = torch.device("mps")
-        list_ids = list(range(1))  # [0]
-    elif torch.cuda.is_available():
-        n_gpu_all = torch.cuda.device_count()
-        if n_gpu > 0 and n_gpu_all == 0:
-            raise ValueError(
-                "Error: GPU not available but n_gpu is {}".format(n_gpu))
-        if n_gpu > n_gpu_all:
-            raise ValueError(
-                "Error: GPU not enough, we can only use {} GPU at most".format(
-                    n_gpu_all))
-        device = torch.device('cuda:0' if n_gpu > 0 else 'cpu')
-        list_ids = list(range(n_gpu))
+    if use_gpu:
+        if torch.backends.mps.is_available():
+            device = torch.device("mps")
+            list_ids = list(range(1))  # [0]
+        elif torch.cuda.is_available():
+            if type(gpu_ids) == int:
+                list_ids = [gpu_ids]
+            else:
+                list_ids = [int(i) for i in gpu_ids.split(',')]
+            n_gpu = len(list_ids)
+            n_gpu_all = torch.cuda.device_count()
+            if n_gpu > 0 and n_gpu_all == 0:
+                raise ValueError(
+                    "Error: GPU not available but n_gpu is {}".format(n_gpu))
+            if n_gpu > n_gpu_all:
+                raise ValueError(
+                    "Error: GPU not enough, we can only use {} GPU at most".
+                    format(n_gpu_all))
+            if n_gpu == 1:
+                device = torch.device('cuda:{}'.format(list_ids[0]))
+            else:
+                device = torch.device('cuda:{}'.format(list_ids[0]))
+        else:
+            raise ValueError("Error: GPU not supported or enabled!")
     else:
         device = torch.device('cpu')
         list_ids = list(range(1))  # [0]
