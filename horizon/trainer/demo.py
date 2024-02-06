@@ -41,7 +41,7 @@ class Demo(BaseTrainer):
         model.eval()
         self.val_metrics.reset()
         with torch.no_grad():
-            for batch_idx, (data, target) in enumerate(self.val_data):
+            for _, (data, target) in enumerate(self.val_data):
                 data, target = data.to(self.device), target.to(self.device)
                 output = model(data)
                 loss = self.criterion(output, target)
@@ -49,23 +49,22 @@ class Demo(BaseTrainer):
                 for met in self.metric_ftns:
                     self.val_metrics.update(met.__name__, met(output, target))
 
-                if batch_idx == 0 and self.config.wandb:
-                    pred = torch.argmax(output, dim=1)
-                    self._log_image_table(data, pred, target)
-
         return self.val_metrics.result()
 
     def _test(self, model):
         model.eval()
         self.test_metrics.reset()
         with torch.no_grad():
-            for _, (data, target) in enumerate(tqdm(self.test_data)):
+            for batch_idx, (data, target) in enumerate(tqdm(self.test_data)):
                 data, target = data.to(self.device), target.to(self.device)
                 output = model(data)
                 loss = self.criterion(output, target)
                 self.test_metrics.update('loss', loss.item())
                 for met in self.metric_ftns:
                     self.test_metrics.update(met.__name__, met(output, target))
+                if batch_idx == 0 and self.config.wandb:
+                    pred = torch.argmax(output, dim=1)
+                    self._log_image_table(data, pred, target)
 
         return self.test_metrics.result()
 

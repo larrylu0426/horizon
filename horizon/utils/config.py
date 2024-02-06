@@ -20,6 +20,9 @@ class ConfigParser:
         wandb.run.name = self._config['dataset']['name'] + \
             '_' + self._config['arch']['name'] + \
             '_' + datetime.now().strftime(r'%m%d_%H%M_%S')
+        
+        if args.mode == "test":
+            wandb.run.name = "test_" + wandb.run.name
 
     def init_obj(self, name, module, *args, **kwargs):
         """

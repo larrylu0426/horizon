@@ -164,18 +164,10 @@ class BaseTrainer:
             if self.do_test:
                 print('Loading best model of {} for testing...'.format(
                     self.best['epoch']))
-                result, wandb_result = self.test(self.best['model'])
-                for k, v in wandb_result.items():
-                    wandb.summary[k] = v
-                # print logged informations to the screen
-                for key, value in result.items():
-                    print('    {:15s}: {}'.format(str(key), value))
+                self.test_model(self.best['model'], best=True)
 
         elif self.config.mode == 'test':
-            result, _ = self.test(self.model)
-            # print logged informations to the screen
-            for key, value in result.items():
-                print('    {:15s}: {}'.format(str(key), value))
+            self.test_model(self.model)
 
     def set_best(self, epoch, log, result):
         try:
@@ -217,10 +209,11 @@ class BaseTrainer:
                                          epoch if not best else 'best'))
         path = os.path.join(ckpt_dir, filename)
         torch.save(state, path)
-        if self.config.wandb:
-            art = wandb.Artifact(wandb.run.name, type="model")
-            art.add_file(path)
-            wandb.log_artifact(art)
+
+    def save_wandb_model(self, path):
+        art = wandb.Artifact(wandb.run.name, type="model")
+        art.add_file(path)
+        wandb.log_artifact(art)
 
     def resume_model(self, path):
         state = torch.load(path)
@@ -231,6 +224,19 @@ class BaseTrainer:
             'epoch'] else state['best']['epoch'] + 1
         self.not_improved_count = state['not_improved_count']
         self.best = state['best']
+
+    def test_model(self, model, best=False):
+        result, wandb_result = self.test(model)
+        for k, v in wandb_result.items():
+            wandb.summary[k] = v
+        # print logged informations to the screen
+        for key, value in result.items():
+            print('    {:15s}: {}'.format(str(key), value))
+        if self.config.wandb:
+            if best:
+                path = os.path.join(const.SAVE_DIR, wandb.run.name,
+                                    'checkpoints', 'model_best.pt')
+                self.save_wandb_model(path)
 
     @timer(phase="train")
     def train(self):
