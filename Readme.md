@@ -101,7 +101,8 @@ trainer:
   value:
     name: Demo
     seed: 0 # the value of seed
-    n_gpu: 1 # number of GPUs to use for training
+    use_gpu: true # use GPU or CPU
+    n_gpu: 0 # ids of GPUs to use
     epochs: 60 # number of training epochs
     monitor: max val_accuracy # mode and metric for model performance monitoring. set 'off' to disable.
     early_stop: 10 # number of epochs to wait before early stop. set 0 to disable.
